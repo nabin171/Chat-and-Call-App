@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import users
+from app.routers import chat
 
 app = FastAPI(title="Chat & Call API")
 app.add_middleware(
@@ -18,7 +19,7 @@ app.add_middleware(
 def root():
     return {"message": "FastAPI backend is running"}
 
-
+app.include_router(chat.router)
 
 app.include_router(users.router)
 @app.get("/health")
