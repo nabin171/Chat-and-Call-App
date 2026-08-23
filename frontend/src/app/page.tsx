@@ -2,7 +2,9 @@
 import Image from "next/image";
 import { useEffect } from "react";
 import {api} from  "@/lib/api";
+
 export default function Home() {
+  
   useEffect(()=>{
     api.get("/health").then(res=>console.log(res.data))
   })
