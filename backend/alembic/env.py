@@ -1,7 +1,7 @@
 
 from app.core.config import settings
 from app.db.database import Base
-from app.models import user,message  # created in step 3
+from app.models import user,message,group  # created in step 3
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config

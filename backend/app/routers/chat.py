@@ -1,4 +1,5 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
+from app.models.group import Group, GroupMember, GroupMessage
 from sqlalchemy.orm import Session
 from jose import jwt, JWTError
 from app.db.database import get_db
@@ -28,6 +29,35 @@ async def websocket_endpoint(websocket: WebSocket, token: str, db: Session = Dep
     try:
         while True:
             data = await websocket.receive_json()
+
+            if data.get("type") == "group_message":
+                group_id = data["group_id"]
+                content = data["content"]
+
+                membership = db.query(GroupMember).filter(
+                    GroupMember.group_id == group_id, GroupMember.user_id == user_id
+                ).first()
+                if not membership:
+                    continue
+
+                new_group_message = GroupMessage(group_id=group_id, sender_id=user_id, content=content)
+                db.add(new_group_message)
+                db.commit()
+                db.refresh(new_group_message)
+
+                members = db.query(GroupMember).filter(GroupMember.group_id == group_id).all()
+                member_ids = [m.user_id for m in members]
+
+                payload_out = {
+                    "type": "group_message",
+                    "group_id": group_id,
+                    "sender_id": user_id,
+                    "content": content,
+                    "created_at": new_group_message.created_at.isoformat(),
+                }
+
+                await manager.send_to_group(payload_out, member_ids)
+                continue
 
             if data.get("type") == "typing":
                 receiver_id = data["receiver_id"]
