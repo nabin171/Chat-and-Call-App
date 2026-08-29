@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
+import { rtcConfig } from "@/lib/webrtc";
 
 interface User {
   id: number;
@@ -17,6 +18,7 @@ interface ChatMessage {
 }
 
 export default function ChatPage() {
+  
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -25,7 +27,14 @@ export default function ChatPage() {
   const [connected, setConnected] = useState(false);
   const [onlineUsers, setOnlineUsers] = useState<Record<number, boolean>>({});
   const [isTyping, setIsTyping] = useState(false);
+  const [callState, setCallState] = useState<"idle" | "calling" | "ringing" | "in-call">("idle");
+const [incomingCall, setIncomingCall] = useState<{ from: number; offer: RTCSessionDescriptionInit } | null>(null);
+const localStreamRef = useRef<MediaStream | null>(null);
+const remoteAudioRef = useRef<HTMLAudioElement | null>(null);
+const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
+  const localVideoRef = useRef<HTMLVideoElement | null>(null);
+const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
 
   // Load current user + all users to pick from
   useEffect(() => {
@@ -43,7 +52,7 @@ export default function ChatPage() {
     ws.onopen = () => setConnected(true);
     ws.onclose = () => setConnected(false);
 
-    ws.onmessage = (event) => {
+    ws.onmessage = async(event) => {
       const data = JSON.parse(event.data);
 
       if (data.type === "typing") {
@@ -51,6 +60,35 @@ export default function ChatPage() {
           setIsTyping(true);
           setTimeout(() => setIsTyping(false), 2000);
         }
+        return;
+      }
+      if (data.type === "call-offer") {
+        setIncomingCall({ from: data.sender_id, offer: data.offer });
+        setCallState("ringing");
+        return;
+      }
+      if (data.type === "call-answer") {
+        await peerConnectionRef.current?.setRemoteDescription(
+          new RTCSessionDescription(data.answer)
+        );
+        setCallState("in-call");
+        return;
+      }
+ if (data.type === "ice-candidate") {
+        if (peerConnectionRef.current) {
+          await peerConnectionRef.current.addIceCandidate(
+            new RTCIceCandidate(data.candidate)
+          );
+        }
+        return;
+      }
+         if (data.type === "call-end" || data.type === "call-reject") {
+        peerConnectionRef.current?.close();
+        peerConnectionRef.current = null;
+        localStreamRef.current?.getTracks().forEach((t) => t.stop());
+        localStreamRef.current = null;
+        setCallState("idle");
+        setIncomingCall(null);
         return;
       }
 
@@ -123,6 +161,108 @@ export default function ChatPage() {
     setInput("");
   };
 
+    const createPeerConnection = (targetUserId: number) => {
+    const pc = new RTCPeerConnection(rtcConfig);
+
+    pc.onicecandidate = (event) => {
+      if (event.candidate && wsRef.current) {
+        wsRef.current.send(
+          JSON.stringify({
+            type: "ice-candidate",
+            receiver_id: targetUserId,
+            candidate: event.candidate,
+          })
+        );
+      }
+    };
+
+    pc.ontrack = (event) => {
+      if (remoteVideoRef.current) {
+        remoteVideoRef.current.srcObject = event.streams[0];
+      }
+    };
+    peerConnectionRef.current = pc;
+    return pc;
+  };
+
+  const startCall = async (targetUser: User) => {
+    setCallState("calling");
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true  });
+    localStreamRef.current = stream;
+
+     if (localVideoRef.current) {
+      localVideoRef.current.srcObject = stream;
+    }
+
+    const pc = createPeerConnection(targetUser.id);
+    stream.getTracks().forEach((track) => pc.addTrack(track, stream));
+
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+
+    wsRef.current?.send(
+      JSON.stringify({
+        type: "call-offer",
+        receiver_id: targetUser.id,
+        offer,
+      })
+    );
+  };
+
+  const acceptCall = async () => {
+    if (!incomingCall) return;
+    setCallState("in-call");
+
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true ,video:true});
+    localStreamRef.current = stream;
+
+       if (localVideoRef.current) {
+      localVideoRef.current.srcObject = stream;
+    }
+
+    const pc = createPeerConnection(incomingCall.from);
+    stream.getTracks().forEach((track) => pc.addTrack(track, stream));
+
+    await pc.setRemoteDescription(new RTCSessionDescription(incomingCall.offer));
+    const answer = await pc.createAnswer();
+    await pc.setLocalDescription(answer);
+
+    wsRef.current?.send(
+      JSON.stringify({
+        type: "call-answer",
+        receiver_id: incomingCall.from,
+        answer,
+      })
+    );
+
+    setIncomingCall(null);
+  };
+
+  const rejectCall = () => {
+    if (!incomingCall) return;
+    wsRef.current?.send(
+      JSON.stringify({ type: "call-reject", receiver_id: incomingCall.from })
+    );
+    setIncomingCall(null);
+    setCallState("idle");
+  };
+
+  const endCall = () => {
+    peerConnectionRef.current?.close();
+    peerConnectionRef.current = null;
+    localStreamRef.current?.getTracks().forEach((t) => t.stop());
+    localStreamRef.current = null;
+    setCallState("idle");
+
+    if (selectedUser) {
+      wsRef.current?.send(
+        JSON.stringify({ type: "call-end", receiver_id: selectedUser.id })
+      );
+    }
+    if (localVideoRef.current) localVideoRef.current.srcObject = null;
+if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
+  };
+
   const conversation = messages.filter(
     (m) =>
       selectedUser &&
@@ -132,6 +272,27 @@ export default function ChatPage() {
 
   return (
     <div className="flex h-screen w-full bg-white">
+      {/* Incoming call banner */}
+      {incomingCall && callState === "ringing" && (
+        <div className="fixed top-4 right-4 bg-white border border-gray-300 shadow-lg rounded-lg p-4 z-50">
+          <p className="font-medium mb-2">Incoming call...</p>
+          <div className="flex gap-2">
+            <button
+              onClick={acceptCall}
+              className="bg-green-600 text-white text-sm px-4 py-2 rounded-full"
+            >
+              Accept
+            </button>
+            <button
+              onClick={rejectCall}
+              className="bg-red-600 text-white text-sm px-4 py-2 rounded-full"
+            >
+              Reject
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Sidebar */}
       <div className="w-64 border-r border-gray-200 flex flex-col">
         <div className="p-4 border-b border-gray-200">
@@ -178,9 +339,31 @@ export default function ChatPage() {
           </div>
         ) : (
           <>
-            <div className="p-4 border-b border-gray-200">
-              <h2 className="font-semibold text-gray-900">{selectedUser.username}</h2>
-              {isTyping && <p className="text-xs text-gray-400">typing...</p>}
+            <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+              <div>
+                <h2 className="font-semibold text-gray-900">{selectedUser.username}</h2>
+                {isTyping && <p className="text-xs text-gray-400">typing...</p>}
+              </div>
+
+              {callState === "idle" && (
+                <button
+                  onClick={() => startCall(selectedUser)}
+                  className="bg-green-600 text-white text-sm px-4 py-2 rounded-full"
+                >
+                  📞 Call
+                </button>
+              )}
+              {callState === "calling" && (
+                <span className="text-sm text-gray-500">Calling...</span>
+              )}
+              {callState === "in-call" && (
+                <button
+                  onClick={endCall}
+                  className="bg-red-600 text-white text-sm px-4 py-2 rounded-full"
+                >
+                  End Call
+                </button>
+              )}
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-2">
@@ -231,6 +414,24 @@ export default function ChatPage() {
           </>
         )}
       </div>
+
+      {callState === "in-call" && (
+        <div className="fixed bottom-4 right-4 flex gap-2 z-40">
+          <video
+            ref={remoteVideoRef}
+            autoPlay
+            playsInline
+            className="w-64 h-48 bg-black rounded-lg object-cover"
+          />
+          <video
+            ref={localVideoRef}
+            autoPlay
+            playsInline
+            muted
+            className="w-32 h-24 bg-black rounded-lg object-cover self-end"
+          />
+        </div>
+      )}
     </div>
   );
 }

@@ -5,6 +5,8 @@ class Settings(BaseSettings):
     secret_key: str = "changeme"
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 60
+    redis_url: str = "redis://localhost:6379"
+    rabbitmq_url: str = "amqp://guest:guest@localhost:5672/"
 
     class Config:
         env_file = ".env"

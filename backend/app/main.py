@@ -6,10 +6,7 @@ from app.routers import chat
 app = FastAPI(title="Chat & Call API")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://192.168.1.104:3000",
-    ],
+    allow_origins=["http://localhost:3000", "https://scorecard-expediter-turban.ngrok-free.dev"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
