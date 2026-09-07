@@ -1,26 +1,110 @@
 @import "tailwindcss";
 
+/* ---------- design tokens ---------- */
 :root {
-  --background: #ffffff;
-  --foreground: #000000;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --app-bg: #eef1f6;
+  --surface: #ffffff;
+  --surface-2: #f4f6fa;
+  --surface-3: #e8ecf3;
+  --border: #dfe4ed;
+  --text: #0d1524;
+  --text-muted: #66748c;
+  --accent: #4f46e5;
+  --accent-hover: #4338ca;
+  --accent-fg: #ffffff;
+  --accent-soft: #eef0ff;
+  --online: #16a34a;
+  --danger: #dc2626;
+  --danger-hover: #b91c1c;
+  --bubble-in: #f1f3f8;
+  --bubble-in-text: #0d1524;
+  --shadow-sm: 0 1px 2px rgb(13 21 36 / 0.06);
+  --shadow-md: 0 4px 16px rgb(13 21 36 / 0.08);
+  --shadow-lg: 0 16px 48px rgb(13 21 36 / 0.18);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --app-bg: #070a10;
+    --surface: #10151f;
+    --surface-2: #161d2a;
+    --surface-3: #1e2736;
+    --border: #232d3f;
+    --text: #e7edf7;
+    --text-muted: #8593a8;
+    --accent: #6366f1;
+    --accent-hover: #818cf8;
+    --accent-fg: #ffffff;
+    --accent-soft: #1c1f3d;
+    --online: #22c55e;
+    --danger: #ef4444;
+    --danger-hover: #f87171;
+    --bubble-in: #1c2432;
+    --bubble-in-text: #e7edf7;
+    --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+    --shadow-md: 0 4px 16px rgb(0 0 0 / 0.45);
+    --shadow-lg: 0 16px 48px rgb(0 0 0 / 0.6);
   }
 }
 
+@theme inline {
+  --color-app: var(--app-bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-line: var(--border);
+  --color-ink: var(--text);
+  --color-muted: var(--text-muted);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-fg: var(--accent-fg);
+  --color-accent-soft: var(--accent-soft);
+  --color-online: var(--online);
+  --color-danger: var(--danger);
+  --color-danger-hover: var(--danger-hover);
+  --color-bubble-in: var(--bubble-in);
+  --color-bubble-in-text: var(--bubble-in-text);
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+}
+
+html, body { height: 100%; }
+
 body {
-  background: #ffffff;
-  color: #000000;
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--app-bg);
+  color: var(--text);
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- scrollbars ---------- */
+.scroll-thin { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+.scroll-thin::-webkit-scrollbar { width: 8px; height: 8px; }
+.scroll-thin::-webkit-scrollbar-track { background: transparent; }
+.scroll-thin::-webkit-scrollbar-thumb {
+  background: var(--border); border-radius: 999px; border: 2px solid transparent;
+  background-clip: content-box;
+}
+.scroll-thin::-webkit-scrollbar-thumb:hover { background: var(--text-muted); background-clip: content-box; }
+
+/* ---------- animations ---------- */
+@keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.animate-rise { animation: rise 0.18s ease-out both; }
+
+@keyframes pop { from { opacity: 0; transform: scale(0.96) translateY(8px); } to { opacity: 1; transform: none; } }
+.animate-pop { animation: pop 0.16s cubic-bezier(0.2, 0.8, 0.3, 1) both; }
+
+@keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+.animate-fade { animation: fade 0.15s ease-out both; }
+
+@keyframes blink { 0%, 60%, 100% { opacity: 0.25; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-3px); } }
+.dot-1 { animation: blink 1.2s infinite 0s; }
+.dot-2 { animation: blink 1.2s infinite 0.18s; }
+.dot-3 { animation: blink 1.2s infinite 0.36s; }
+
+@keyframes ringpulse { 0% { box-shadow: 0 0 0 0 rgb(79 70 229 / 0.45); } 100% { box-shadow: 0 0 0 18px rgb(79 70 229 / 0); } }
+.animate-ring { animation: ringpulse 1.4s ease-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-rise, .animate-pop, .animate-fade, .dot-1, .dot-2, .dot-3, .animate-ring { animation: none !important; }
 }
