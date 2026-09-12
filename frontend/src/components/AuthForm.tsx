@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { setToken } from "@/lib/auth";
-import { AlertIcon, ChatBubbleIcon } from "@/components/Icons";
+import { AlertIcon, ChatBubbleIcon, EyeIcon, EyeOffIcon } from "@/components/Icons";
 
 type Mode = "login" | "signup";
 
@@ -39,6 +39,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [showPassword, setShowPassword] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -173,22 +174,44 @@ export function AuthForm({ mode }: { mode: Mode }) {
                 />
               </div>
             )}
-
             <div className="space-y-1.5">
-              <label htmlFor="password" className="block text-xs font-medium text-muted">
-                Password
-              </label>
-              <input
-                id="password"
-                type="password"
-                autoComplete={mode === "signup" ? "new-password" : "current-password"}
-                placeholder={mode === "signup" ? "At least 8 characters" : "Your password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className={field}
-                required
-              />
+              <div className="flex items-center justify-between">
+                <label htmlFor="password" className="block text-xs font-medium text-muted">
+                  Password
+                </label>
+                {mode === "login" && (
+                  <Link
+                    href="/forgot-password"
+                    className="text-xs font-medium text-accent hover:underline"
+                  >
+                    Forgot password?
+                  </Link>
+                )}
+              </div>
+              <div className="relative">
+                <input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete={mode === "signup" ? "new-password" : "current-password"}
+                  placeholder={mode === "signup" ? "At least 8 characters" : "Your password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className={`${field} pr-11`}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  aria-pressed={showPassword}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted transition hover:text-ink focus:text-accent focus:outline-none"
+                >
+                  {showPassword ? <EyeOffIcon className="h-4 w-4" /> : <EyeIcon className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
+
+
 
             {error && (
               <p

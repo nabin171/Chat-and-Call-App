@@ -148,7 +148,7 @@ export default function ChatPage() {
         clearToken();
         router.replace("/login");
       });
-    api.get("/users/").then((res) => setUsers(res.data)).catch(() => {});
+    api.get("/users/").then((res) => setUsers(res.data)).catch(() => { });
     api
       .get("/groups/")
       .then((res) => setGroups(res.data))
@@ -541,9 +541,8 @@ export default function ChatPage() {
                   setSelectedUser(u);
                   setSelectedGroup(null);
                 }}
-                className={`mb-0.5 flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-left transition ${
-                  active ? "bg-accent text-accent-fg" : "text-ink hover:bg-surface-2"
-                }`}
+                className={`mb-0.5 flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-left transition ${active ? "bg-accent text-accent-fg" : "text-ink hover:bg-surface-2"
+                  }`}
               >
                 <Avatar name={u.username} seed={u.id} size="sm" online={!!onlineUsers[u.id]} />
                 <span className="min-w-0 flex-1">
@@ -583,9 +582,8 @@ export default function ChatPage() {
                   setSelectedGroup(g);
                   setSelectedUser(null);
                 }}
-                className={`mb-0.5 flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-left transition ${
-                  active ? "bg-accent text-accent-fg" : "text-ink hover:bg-surface-2"
-                }`}
+                className={`mb-0.5 flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-left transition ${active ? "bg-accent text-accent-fg" : "text-ink hover:bg-surface-2"
+                  }`}
               >
                 <Avatar name={g.name} seed={`group-${g.id}`} size="sm" square />
                 <span className="min-w-0 flex-1">
@@ -660,13 +658,15 @@ export default function ChatPage() {
                 </button>
               )}
               {isGroupView && (
-                <span
-                  title="Group video calling is Phase 12 - not wired up yet"
-                  className="rounded-lg bg-surface-2 px-2.5 py-1 text-xs text-muted"
+                <button
+                  onClick={() => router.push(`/call/${selectedGroup!.id}`)}
+                  className="flex items-center gap-2 rounded-xl bg-accent px-3.5 py-2 text-sm font-medium text-accent-fg transition hover:bg-accent-hover"
                 >
-                  Group calls coming soon
-                </span>
+                  <VideoIcon className="h-4 w-4" />
+                  Join call
+                </button>
               )}
+
             </header>
 
             {/* messages */}
@@ -697,9 +697,8 @@ export default function ChatPage() {
                         )}
 
                         <div
-                          className={`flex items-end gap-2 ${isMine ? "justify-end" : "justify-start"} ${
-                            startsRun ? "mt-2.5" : "mt-0.5"
-                          }`}
+                          className={`flex items-end gap-2 ${isMine ? "justify-end" : "justify-start"} ${startsRun ? "mt-2.5" : "mt-0.5"
+                            }`}
                         >
                           {!isMine && isGroupView && (
                             <span className={startsRun ? "" : "invisible"}>
@@ -708,9 +707,8 @@ export default function ChatPage() {
                           )}
 
                           <div
-                            className={`flex max-w-[min(75%,34rem)] flex-col ${
-                              isMine ? "items-end" : "items-start"
-                            }`}
+                            className={`flex max-w-[min(75%,34rem)] flex-col ${isMine ? "items-end" : "items-start"
+                              }`}
                           >
                             {startsRun && !isMine && isGroupView && (
                               <span className="mb-1 px-1 text-xs font-medium text-muted">
@@ -718,21 +716,18 @@ export default function ChatPage() {
                               </span>
                             )}
                             <div
-                              className={`animate-rise group relative px-3.5 py-2 text-sm leading-relaxed ${
-                                isMine
-                                  ? "bg-accent text-accent-fg"
-                                  : "bg-bubble-in text-bubble-in-text"
-                              } ${
-                                isMine
+                              className={`animate-rise group relative px-3.5 py-2 text-sm leading-relaxed ${isMine
+                                ? "bg-accent text-accent-fg"
+                                : "bg-bubble-in text-bubble-in-text"
+                                } ${isMine
                                   ? `rounded-2xl ${startsRun ? "rounded-br-md" : "rounded-br-md rounded-tr-md"}`
                                   : `rounded-2xl ${startsRun ? "rounded-bl-md" : "rounded-bl-md rounded-tl-md"}`
-                              }`}
+                                }`}
                             >
                               <span className="whitespace-pre-wrap break-words">{m.content}</span>
                               <span
-                                className={`mt-1 block text-right text-[10px] tabular-nums ${
-                                  isMine ? "text-accent-fg/60" : "text-muted"
-                                }`}
+                                className={`mt-1 block text-right text-[10px] tabular-nums ${isMine ? "text-accent-fg/60" : "text-muted"
+                                  }`}
                               >
                                 {timeOf(m.createdAt)}
                               </span>
@@ -871,9 +866,8 @@ export default function ChatPage() {
               onClick={toggleMic}
               title={micOn ? "Mute microphone" : "Unmute microphone"}
               aria-label={micOn ? "Mute microphone" : "Unmute microphone"}
-              className={`grid h-12 w-12 place-items-center rounded-full transition ${
-                micOn ? "bg-white/10 text-white hover:bg-white/20" : "bg-white text-[#0a0d14]"
-              }`}
+              className={`grid h-12 w-12 place-items-center rounded-full transition ${micOn ? "bg-white/10 text-white hover:bg-white/20" : "bg-white text-[#0a0d14]"
+                }`}
             >
               {micOn ? <MicIcon /> : <MicOffIcon />}
             </button>
@@ -881,9 +875,8 @@ export default function ChatPage() {
               onClick={toggleCam}
               title={camOn ? "Turn camera off" : "Turn camera on"}
               aria-label={camOn ? "Turn camera off" : "Turn camera on"}
-              className={`grid h-12 w-12 place-items-center rounded-full transition ${
-                camOn ? "bg-white/10 text-white hover:bg-white/20" : "bg-white text-[#0a0d14]"
-              }`}
+              className={`grid h-12 w-12 place-items-center rounded-full transition ${camOn ? "bg-white/10 text-white hover:bg-white/20" : "bg-white text-[#0a0d14]"
+                }`}
             >
               {camOn ? <VideoIcon /> : <VideoOffIcon />}
             </button>
@@ -934,9 +927,8 @@ export default function ChatPage() {
                 return (
                   <label
                     key={u.id}
-                    className={`flex cursor-pointer items-center gap-3 rounded-lg px-2.5 py-2 transition ${
-                      checked ? "bg-accent-soft" : "hover:bg-surface-2"
-                    }`}
+                    className={`flex cursor-pointer items-center gap-3 rounded-lg px-2.5 py-2 transition ${checked ? "bg-accent-soft" : "hover:bg-surface-2"
+                      }`}
                   >
                     <input
                       type="checkbox"
