@@ -97,3 +97,17 @@ export const AlertIcon = ({ className = base }: IconProps) => (
     <path d="M12 8v5M12 16h.01" />
   </svg>
 );
+export const EyeIcon = ({ className = base }: IconProps) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z" />
+    <circle cx="12" cy="12" r="3" />
+  </svg>
+);
+
+export const EyeOffIcon = ({ className = base }: IconProps) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M10.6 6.2A8 8 0 0 1 12 6c6.4 0 10 7 10 7a18.5 18.5 0 0 1-2.2 3.1M6.6 6.8A18 18 0 0 0 2 13s3.6 7 10 7a9.7 9.7 0 0 0 4.3-1" />
+    <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2" />
+    <path d="m2 2 20 20" />
+  </svg>
+);
